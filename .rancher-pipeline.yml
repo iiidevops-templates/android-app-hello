@@ -1,0 +1,116 @@
+stages:
+- name: Test--SonarQube for Java(Gradle)
+  iiidevops: sonarqube
+  steps:
+  - runScriptConfig:
+      image: library/gradle:jdk11
+      shellScript: "# \u9019\u88E1\u8981\u548C\u4F60\u8981\u7DE8\u8B6F\u7684Android\u7248\
+        \u672C\u76F8\u540C\u5728 `app/build.gradle`\nexport ANDROID_COMPILE_SDK=\"\
+        28\"\n# \u9019\u88E1\u4E5F\u662F\u8981\u548C\u8981\u7DE8\u8B6F\u7684\u7248\
+        \u672C\u76F8\u540C `app/build.gradle`\nexport ANDROID_BUILD_TOOLS=\"28.0.3\"\
+        \n# Version from https://developer.android.com/studio/releases/sdk-tools\n\
+        export ANDROID_SDK_TOOLS=\"24.4.1\"\nexport ANDROID_HOME=${PWD}/android-sdk-linux\n\
+        echo ${ANDROID_HOME}\nexport PATH=\"${PATH}:/android-sdk-linux/platform-tools/\"\
+        \n# install OS packages\napt-get --quiet update --yes\napt-get --quiet install\
+        \ --yes wget apt-utils tar unzip lib32stdc++6 lib32z1 build-essential ruby\
+        \ ruby-dev\n# We use this for xxd hex->binary\napt-get --quiet install --yes\
+        \ vim-common\n# install Android SDK\nwget --quiet --output-document=android-sdk.tgz\
+        \ https://dl.google.com/android/android-sdk_r${ANDROID_SDK_TOOLS}-linux.tgz\n\
+        tar --extract --gzip --file=android-sdk.tgz\necho y | android-sdk-linux/tools/android\
+        \ --silent update sdk --no-ui --all --filter android-${ANDROID_COMPILE_SDK}\n\
+        echo y | android-sdk-linux/tools/android --silent update sdk --no-ui --all\
+        \ --filter platform-tools\necho y | android-sdk-linux/tools/android --silent\
+        \ update sdk --no-ui --all --filter build-tools-${ANDROID_BUILD_TOOLS}\necho\
+        \ y | android-sdk-linux/tools/android --silent update sdk --no-ui --all --filter\
+        \ extra-android-m2repository\necho y | android-sdk-linux/tools/android --silent\
+        \ update sdk --no-ui --all --filter extra-google-google_play_services\necho\
+        \ y | android-sdk-linux/tools/android --silent update sdk --no-ui --all --filter\
+        \ extra-google-m2repository\n# install FastLane\ngem install bundler -v 1.16.6\
+        \ && bundle install && ls\nchmod -R 777 . \necho '========== AndroidLint =========='\n\
+        ./gradlew :app:lint\n./gradlew -Dsonar.host.url=http://sonarqube-server-service.default:9000\
+        \ -Dsonar.projectKey=${CICD_GIT_REPO_NAME} -Dsonar.projectName=${CICD_GIT_REPO_NAME}\
+        \ -Dsonar.projectVersion=${CICD_GIT_BRANCH}:${CICD_GIT_COMMIT} -Dsonar.androidLint.reportPaths=${PWD}/app/build/reports/lint-results.xml\
+        \ -Dsonar.log.level=DEBUG -Dsonar.qualitygate.wait=true -Dsonar.qualitygate.timeout=600\
+        \ sonarqube\n"
+  when:
+    branch:
+      include:
+      - master
+- name: Build--Build and push docker image
+  steps:
+  - env:
+      PLUGIN_BUILD_ARGS: --progress=tty --network=host
+      PLUGIN_DEBUG: 'true'
+      PLUGIN_INSECURE: 'true'
+      PLUGIN_MIRROR: https://harbor-dev3.iiidevops.org
+      PLUGIN_MTU: '1000'
+    publishImageConfig:
+      buildContext: .
+      dockerfilePath: ./Dockerfile
+      pushRemote: true
+      registry: harbor-dev3.iiidevops.org
+      tag: ${CICD_GIT_REPO_NAME}/${CICD_GIT_BRANCH}:${CICD_GIT_COMMIT}
+  when:
+    branch:
+      include:
+      - master
+- name: Deploy--Set Web environment variables
+  steps:
+  - envFrom:
+    - sourceKey: API_TOKEN
+      sourceName: pipeline-api-key
+      targetKey: rancher_api_token
+    - sourceKey: rancher-url
+      sourceName: rancher
+      targetKey: rancher_url
+    runScriptConfig:
+      image: iiiorg/rancher-cli:v2.4.6
+      shellScript: rancher login ${rancher_url} -t ${rancher_api_token} --skip-verify
+        && rancher kubectl delete configmap -n ${CICD_GIT_REPO_NAME} ${CICD_GIT_REPO_NAME}-${CICD_GIT_BRANCH}-env
+        --ignore-not-found=true && rancher kubectl create configmap -n ${CICD_GIT_REPO_NAME}
+        ${CICD_GIT_REPO_NAME}-${CICD_GIT_BRANCH}-env --from-env-file=iiidevops/app.env
+        && rancher kubectl annotate configmap -n ${CICD_GIT_REPO_NAME} ${CICD_GIT_REPO_NAME}-${CICD_GIT_BRANCH}-env
+        iiidevops.org/project_name=${CICD_GIT_REPO_NAME} iiidevops.org/branch=${CICD_GIT_BRANCH}
+        iiidevops.org/commit_id=${CICD_GIT_COMMIT} iiidevops.org/type=appenv
+  when:
+    branch:
+      include:
+      - master
+- name: Deploy--Web
+  steps:
+  - applyAppConfig:
+      answers:
+        git.branch: ${CICD_GIT_BRANCH}
+        git.commitID: ${CICD_GIT_COMMIT}
+        git.repoName: ${CICD_GIT_REPO_NAME}
+        git.url: ${CICD_GIT_URL}
+        harbor.host: harbor-dev3.iiidevops.org
+        kube.ingress.base_domain: ingress-dev3.iiidevops.org
+        pipeline.sequence: ${CICD_EXECUTION_SEQUENCE}
+        web.imageTag: ${CICD_GIT_REPO_NAME}/${CICD_GIT_BRANCH}:${CICD_GIT_COMMIT}
+        web.port: 80
+      catalogTemplate: cattle-global-data:iii-dev-charts3-web
+      name: ${CICD_GIT_REPO_NAME}-${CICD_GIT_BRANCH}-serv
+      targetNamespace: ${CICD_GIT_REPO_NAME}
+      version: 0.5.2
+  when:
+    branch:
+      include:
+      - master
+- name: Test--Checkmarx source code scan
+  steps:
+  - applyAppConfig:
+      answers:
+        git.branch: ${CICD_GIT_BRANCH}
+        git.commitID: ${CICD_GIT_COMMIT}
+        git.repoName: ${CICD_GIT_REPO_NAME}
+        git.url: ${CICD_GIT_URL}
+        pipeline.sequence: ${CICD_EXECUTION_SEQUENCE}
+      catalogTemplate: cattle-global-data:iii-dev-charts3-scan-checkmarx
+      name: ${CICD_GIT_REPO_NAME}-${CICD_GIT_BRANCH}-cmx
+      targetNamespace: ${CICD_GIT_REPO_NAME}
+      version: 0.1.0
+  when:
+    branch:
+      include:
+      - master
