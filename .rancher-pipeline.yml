@@ -1,5 +1,5 @@
 stages:
-- name: Test--SonarQube for Java(Gradle)
+- name: Test--SonarQube for Java(Android)
   iiidevops: sonarqube
   steps:
   - runScriptConfig:
@@ -36,25 +36,28 @@ stages:
     branch:
       include:
       - master
-- name: Build--Build and push docker image
+      - develop
+- name: Test--Checkmarx source code scan
+  iiidevops: checkmarx
   steps:
-  - env:
-      PLUGIN_BUILD_ARGS: --progress=tty --network=host
-      PLUGIN_DEBUG: 'true'
-      PLUGIN_INSECURE: 'true'
-      PLUGIN_MIRROR: https://harbor-dev3.iiidevops.org
-      PLUGIN_MTU: '1000'
-    publishImageConfig:
-      buildContext: .
-      dockerfilePath: ./Dockerfile
-      pushRemote: true
-      registry: harbor-dev3.iiidevops.org
-      tag: ${CICD_GIT_REPO_NAME}/${CICD_GIT_BRANCH}:${CICD_GIT_COMMIT}
+  - applyAppConfig:
+      answers:
+        git.branch: ${CICD_GIT_BRANCH}
+        git.commitID: ${CICD_GIT_COMMIT}
+        git.repoName: ${CICD_GIT_REPO_NAME}
+        git.url: ${CICD_GIT_URL}
+        pipeline.sequence: ${CICD_EXECUTION_SEQUENCE}
+      catalogTemplate: cattle-global-data:iii-dev-charts3-scan-checkmarx
+      name: ${CICD_GIT_REPO_NAME}-${CICD_GIT_BRANCH}-cmx
+      targetNamespace: ${CICD_GIT_REPO_NAME}
+      version: 0.2.0
   when:
     branch:
       include:
       - master
+      - develop
 - name: Deploy--Set Web environment variables
+  iiidevops: deployed-environments
   steps:
   - envFrom:
     - sourceKey: API_TOKEN
@@ -76,7 +79,27 @@ stages:
     branch:
       include:
       - master
+- name: Build--Build and push docker image
+  iiidevops: deployed-environments
+  steps:
+  - env:
+      PLUGIN_BUILD_ARGS: --progress=tty --network=host
+      PLUGIN_DEBUG: 'true'
+      PLUGIN_INSECURE: 'true'
+      PLUGIN_MIRROR: https://harbor-dev3.iiidevops.org
+      PLUGIN_MTU: '1000'
+    publishImageConfig:
+      buildContext: .
+      dockerfilePath: ./Dockerfile
+      pushRemote: true
+      registry: harbor-dev3.iiidevops.org
+      tag: ${CICD_GIT_REPO_NAME}/${CICD_GIT_BRANCH}:${CICD_GIT_COMMIT}
+  when:
+    branch:
+      include:
+      - master
 - name: Deploy--Web
+  iiidevops: deployed-environments
   steps:
   - applyAppConfig:
       answers:
@@ -85,31 +108,36 @@ stages:
         git.repoName: ${CICD_GIT_REPO_NAME}
         git.url: ${CICD_GIT_URL}
         harbor.host: harbor-dev3.iiidevops.org
-        kube.ingress.base_domain: ingress-dev3.iiidevops.org
         pipeline.sequence: ${CICD_EXECUTION_SEQUENCE}
         web.imageTag: ${CICD_GIT_REPO_NAME}/${CICD_GIT_BRANCH}:${CICD_GIT_COMMIT}
         web.port: 80
+        kube.ingress.base_domain: ingress-dev3.iiidevops.org
       catalogTemplate: cattle-global-data:iii-dev-charts3-web
       name: ${CICD_GIT_REPO_NAME}-${CICD_GIT_BRANCH}-serv
       targetNamespace: ${CICD_GIT_REPO_NAME}
-      version: 0.5.2
+      version: 0.5.3
   when:
     branch:
       include:
       - master
-- name: Test--Checkmarx source code scan
+- name: Deploy--Wait Web deployment
+  iiidevops: deployed-environments
   steps:
-  - applyAppConfig:
-      answers:
-        git.branch: ${CICD_GIT_BRANCH}
-        git.commitID: ${CICD_GIT_COMMIT}
-        git.repoName: ${CICD_GIT_REPO_NAME}
-        git.url: ${CICD_GIT_URL}
-        pipeline.sequence: ${CICD_EXECUTION_SEQUENCE}
-      catalogTemplate: cattle-global-data:iii-dev-charts3-scan-checkmarx
-      name: ${CICD_GIT_REPO_NAME}-${CICD_GIT_BRANCH}-cmx
-      targetNamespace: ${CICD_GIT_REPO_NAME}
-      version: 0.1.0
+  - env:
+      deploy_name: ${CICD_GIT_REPO_NAME}-${CICD_GIT_BRANCH}-serv
+      max_wait: 128
+      namespace: ${CICD_GIT_REPO_NAME}
+    envFrom:
+    - sourceKey: API_TOKEN
+      sourceName: pipeline-api-key
+      targetKey: rancher_api_token
+    - sourceKey: rancher-url
+      sourceName: rancher
+      targetKey: rancher_url
+    runScriptConfig:
+      image: iiiorg/deployment-waiter:0.0.2
+      shellScript: rancher login ${rancher_url} -t ${rancher_api_token} --skip-verify;
+        bash /app/run.sh
   when:
     branch:
       include:
