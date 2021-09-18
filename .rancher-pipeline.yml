@@ -76,7 +76,7 @@ stages:
   when:
     branch:
       include:
-      - master
+      - skip
 - name: Build--Build and push docker image
   iiidevops: deployed-environments
   steps:
@@ -95,7 +95,7 @@ stages:
   when:
     branch:
       include:
-      - master
+      - skip
 - name: Deploy--Web
   iiidevops: deployed-environments
   steps:
@@ -117,7 +117,7 @@ stages:
   when:
     branch:
       include:
-      - master
+      - skip
 - name: Deploy--Wait Web deployment
   iiidevops: deployed-environments
   steps:
@@ -139,4 +139,4 @@ stages:
   when:
     branch:
       include:
-      - master
+      - skip
