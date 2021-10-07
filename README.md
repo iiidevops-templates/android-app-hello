@@ -9,7 +9,6 @@ Android Example From GitLab Template
 
 * 此範例主要是針對大部分過去`Android`常見方式來做範本與說明，近年來Android已主要採用Commandline的形式來方便開發者做相關套件的維護與下載。
 * 實證環境的網頁服務`EXPOSE PORT`為`80`，若有需要做更動調整請參考`iiidevops`教學網站內的`.rancher-pipeline`修改說明文件。
-* 由於本專案並無`Postman`與`Sideex`的需求，因此專案內iiidevops資料夾內看到的`Postman`與`Sideex`資料夾與相關文件可以無視。
 * 由於`Android`專案的特殊性，因此若持續開發上可能會面臨一些需求需要調整的部分，因此詳細修改說明將在下方章節做描述。
 
 ### 專案資訊
@@ -36,14 +35,14 @@ android {
 * `Dockerfile`: 主要目的是因為在`iiidevops`內透過`Dockerfile`來編譯產生`Debug`用的`APK`檔案以及透過網頁檔案管理來做實證環境部屬。
     ```
     FROM openjdk:8-jdk AS Builder
-
+    
     # Just matched `app/build.gradle`
     ENV ANDROID_COMPILE_SDK "28" <- 這裡是編譯版本28
     # Just matched `app/build.gradle`
     ENV ANDROID_BUILD_TOOLS "28.0.3" <- 這裡是Build版本
     # Version from https://developer.android.com/studio/releases/sdk-tools
     ENV ANDROID_SDK_TOOLS "24.4.1" <- 這裡是SDK版本(如果不是很新的SDK 30的話通常是不必去動這個部分)
-
+    
     ...........
     ```
 * `.rancher-pipeline.yaml`: 此則主要是因為在`rancher-pipeleine.yaml`內需要進行Sonarqube掃描，`Sonarqube`針對`JAVA`的掃描機制需要透過`Gradle` Build來進行掃描動作，因此需要針對這裡做調整與修改來完成`Gardle`的編譯，同時在Sonarqube步驟內也會包含`AndroidLint`的測試報告內容。
@@ -109,7 +108,15 @@ RUN ./gradlew -Pci --console=plain :app:testDebug
 ```
 
 ### 觀看瀏覽器`html`版本的`AndroidLint`報告
-此步驟仰賴`Dockerfile`內添加下列`AndroidLint`這個步驟，因為此步驟會產生兩種檔案，分別是是`xml`與`html`格式的檔案，然後在最後添加上`COPY --from=Builder /app/build/reports/lint-results.html /srv/androidlint網頁結果報告.html`即可在最後的`實證環境`上的檔案瀏覽器上面找到AndroidLint網頁結果報告檔案(`androidlint網頁結果報告.html`)，下載下來後即可透過瀏覽器開啟報告結果。
+此步驟是在`Dockerfile`內添加下列`AndroidLint`來產生網頁檔案瀏覽與下載功能
+
+預設登入帳號為 **admin** , 密碼為 **iiidevops**
+可自行修改 iiidevops/app.env 內的 **FB_USERNAME** 與 **FB_PASSWORD** 的設定值來更改登入帳號與密碼
+
+密碼採用 bcrypt 編碼加密, 可以使用 [Bcrypt-Generator.com](https://bcrypt-generator.com/) 網頁工具來產生
+
+此步驟會產生兩種檔案，分別是`xml`與`html`格式的檔案，然後在最後添加上`COPY --from=Builder /app/build/reports/lint-results.html /srv/androidlint網頁結果報告.html`即可在最後的`實證環境`上的檔案瀏覽器上面找到AndroidLint網頁結果報告檔案(`androidlint網頁結果報告.html`)，下載下來後即可透過瀏覽器開啟報告結果。
+
 ```
 ...........
 ## (這裡建議添加為前置步驟，可以註解掉) <- 因為這裡可以檢查專案裡面的結構語法Lint是否正確
@@ -138,17 +145,13 @@ COPY --from=Builder /app/build/reports/lint-results.html /srv/androidlint網頁�
 | 檔案 | .rancher-pipeline.yml | :warning: (不可更動)devops系統測試所需檔案 | 在根目錄 |
 | 檔案 | pipeline_settings.json | :warning: (不可更動)devops系統測試所需檔案 | 在iiidevops資料夾內 |
 | 檔案 | app.env | (可調整)實證環境 `web`環境變數添加 | 在iiidevops資料夾內 | 
-| 檔案 | postman_collection.json | (可調整)devops newman部屬測試案例檔案 | iiidevops/postman資料夾內 |
-| 檔案 | postman_environment.json | (可調整)devops newman部屬測試環境變數檔案 | iiidevops/postman資料夾內 |
-| 檔案 | sideex.json | (可調整)devops Sideex部屬測試檔案 | iiidevops/sideex資料夾內 |
 | 檔案 | Dockerfile | (可調整)devops k8s環境部屬檔案 | 根目錄 |
 
 ## iiidevops
 * 專案內`.rancher-pipeline.yml`請勿更動，產品系統設計上不支援pipeline修改，但若預設`README.md`文件內有寫引導說明部分則例外。
 * `iiidevops`資料夾內`pipeline_settings.json`請勿更動。
-* `postman`資料夾內則是您在devops管理網頁上的Postman-collection(newman)自動測試檔案，devops系統會以`postman`資料夾內檔案做自動測試。
 * `Dockerfile`內可能會看到很多來源都加上前墜`dockerhub`，此為必須需求，為使image能從iiidevops產品所架設的`harbor`上作為來源擷取出Docker Hub的image來源。
-* 若使用上有任何問題請至`https://www.iiidevops.org/`內的`聯絡方式`頁面做問題回報。
+* 若使用上有任何問題請至 https://www.iiidevops.org/ 內的`聯絡方式`頁面做問題回報。
 
 
 
