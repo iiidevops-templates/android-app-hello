@@ -35,7 +35,6 @@ stages:
   when:
     branch:
       include:
-      - master
       - develop
 - name: Test--Checkmarx source code scan
   iiidevops: checkmarx
