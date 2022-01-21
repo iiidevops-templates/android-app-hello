@@ -30,16 +30,11 @@ echo y | android-sdk-linux/tools/android --silent update sdk --no-ui --all --fil
 # install FastLane
 gem install bundler -v 1.16.6 && bundle install && ls
 
-# Check token
-if [! -f "sonar-token.txt" ]; then
-  echo "Check token failed!"		
-  exit 1;
-fi
-
 echo '========== AndroidLint =========='
-ls -lR ${PWD}/app/build/
 chmod -R 777 . 
 export SONAR_TOKEN=$(cat sonar-token.txt) && ./gradlew :app:lint
+ls -lR ${PWD}/app/build/
+
 ./gradlew -Dsonar.host.url=http://sonarqube-server-service.default:9000\
 	-Dsonar.projectKey=${CICD_GIT_REPO_NAME} -Dsonar.projectName=${CICD_GIT_REPO_NAME}\
 	-Dsonar.projectVersion=${CICD_GIT_BRANCH}:${CICD_GIT_COMMIT} -Dsonar.androidLint.reportPaths=${PWD}/app/build/reports/lint-results.xml\
