@@ -63,6 +63,7 @@ stages:
     branch:
       include:
       - develop
+      - master
 - name: Test--Checkmarx source code scan
   iiidevops: checkmarx
   steps:
@@ -82,6 +83,7 @@ stages:
     branch:
       include:
       - skip-master
+      - master
 - name: Deploy--Set Web environment variables
   iiidevops: deployed-environments
   steps:
