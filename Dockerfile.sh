@@ -12,7 +12,7 @@ echo $PATH
 
 # install OS packages
 apt-get --quiet update --yes
-apt-get --quiet install --yes wget apt-utils tar unzip lib32stdc++6 lib32z1 build-essential ruby ruby-dev
+apt-get --quiet install --yes wget apt-utils tar unzip lib32stdc++6 lib32z1 build-essential ruby ruby-dev tree
 # We use this for xxd hex->binary
 apt-get --quiet install --yes vim-common
 # install Android SDK
@@ -30,18 +30,16 @@ echo y | android-sdk-linux/tools/android --silent update sdk --no-ui --all --fil
 # install FastLane
 gem install bundler -v 1.16.6 && bundle install && ls
 
-echo "Bundle Install End"
-## 輔助看打包檔案指令XDDD
-apt-get --quiet install --yes tree
-
 ## 專案程式碼放入
 ## 檢測放入結果, IF使用者要除錯的話XD
-echo "Before Gradlew"
-ls -a && chmod +x ./gradlew
+#echo "Before Gradlew"
+#ls -a && chmod +x ./gradlew
 
-echo "Test File Output" >> ./bash_shell_script.txt
+#echo "Test File Output" >> ./bash_shell_script.txt
 ## (這裡建議添加為前置步驟，可以註解掉) <- 因為這裡可以檢查專案裡面的結構語法Lint是否正確
 #RUN ./gradlew -Pci --console=plain :app:lintDebug -PbuildDir=lint
+
+echo '========== Android Lint =========='
 ./gradlew :app:lint
 
 ## (這裡也建議添加為前置步驟，可以註解掉) <- 這裡可以跑專案內有寫的測試
@@ -53,6 +51,4 @@ echo "Test File Output" >> ./bash_shell_script.txt
 ## 給使用者看產生出來的APK，IF使用者要除錯的話
 echo $PWD
 cd app && tree
-
-
 ls -l
