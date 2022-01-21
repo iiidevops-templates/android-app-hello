@@ -36,6 +36,7 @@ stages:
     branch:
       include:
       - develop
+      - master
 - name: Test--Checkmarx source code scan
   iiidevops: checkmarx
   steps:
@@ -79,7 +80,6 @@ stages:
     branch:
       include:
       - skip-master
-      - master
 - name: Build--APK for Java(Gradle)
   iiidevops: deployed-environments
   steps:
@@ -89,7 +89,7 @@ stages:
   when:
     branch:
       include:
-      - master
+      - skip
 - name: Build--Build and push docker image
   iiidevops: deployed-environments
   steps:
@@ -109,7 +109,6 @@ stages:
     branch:
       include:
       - skip-master
-      - master
 - name: Deploy--Web
   iiidevops: deployed-environments
   steps:
@@ -133,7 +132,6 @@ stages:
     branch:
       include:
       - skip-master
-      - master
 - name: Deploy--Wait Web deployment
   iiidevops: deployed-environments
   steps:
@@ -156,7 +154,6 @@ stages:
     branch:
       include:
       - skip-master
-      - master
 - name: Test--Cmas APK scan pre-processing
   iiidevops: cmas
   steps:
