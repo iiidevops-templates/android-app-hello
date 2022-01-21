@@ -30,29 +30,11 @@ echo y | android-sdk-linux/tools/android --silent update sdk --no-ui --all --fil
 # install FastLane
 gem install bundler -v 1.16.6 && bundle install && ls
 
-echo "Bundle Install End"
-## 輔助看打包檔案指令XDDD
-apt-get --quiet install --yes tree
-
-## 專案程式碼放入
-## 檢測放入結果, IF使用者要除錯的話XD
-echo "Before Gradlew"
-ls -a && chmod +x ./gradlew
-
-echo "Test File Output" >> ./bash_shell_script.txt
-## (這裡建議添加為前置步驟，可以註解掉) <- 因為這裡可以檢查專案裡面的結構語法Lint是否正確
-#RUN ./gradlew -Pci --console=plain :app:lintDebug -PbuildDir=lint
-./gradlew :app:lint
-
-## (這裡也建議添加為前置步驟，可以註解掉) <- 這裡可以跑專案內有寫的測試
-./gradlew -Pci --console=plain :app:testDebug
-
-## (這裡產生檔案APK檔案) <- 主要工作
-./gradlew assembleDebug
-#./gradlew
-## 給使用者看產生出來的APK，IF使用者要除錯的話
-echo $PWD
-cd app && tree
-
-
-ls -l
+echo '========== AndroidLint =========='
+chmod -R 777 . 
+export SONAR_TOKEN=$(cat token.txt) && ./gradlew :app:lint
+./gradlew -Dsonar.host.url=http://sonarqube-server-service.default:9000\
+	-Dsonar.projectKey=${CICD_GIT_REPO_NAME} -Dsonar.projectName=${CICD_GIT_REPO_NAME}\
+	-Dsonar.projectVersion=${CICD_GIT_BRANCH}:${CICD_GIT_COMMIT} -Dsonar.androidLint.reportPaths=${PWD}/app/build/reports/lint-results.xml\
+	-Dsonar.log.level=DEBUG -Dsonar.qualitygate.wait=true -Dsonar.qualitygate.timeout=600\
+	-Dsonar.login=$SONAR_TOKEN sonarqube
