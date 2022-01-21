@@ -86,7 +86,7 @@ stages:
   iiidevops: deployed-environments
   steps:
   - runScriptConfig:
-      image: openjdk:8-jdk-slim
+      image: library/gradle:jdk11
       shellScript: ls -l; chmod 777 Dockerfile.sh; ./Dockerfile.sh
   when:
     branch:
