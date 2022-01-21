@@ -30,6 +30,19 @@ echo y | android-sdk-linux/tools/android --silent update sdk --no-ui --all --fil
 # install FastLane
 gem install bundler -v 1.16.6 && bundle install && ls
 
+# Check token
+num=5
+while [ $num -ge 0 ]
+do
+  echo $num
+  ((num--))
+  if [ -f "token.txt" ]; then
+    echo "Check token file OK!"		
+    break
+  fi
+  sleep 0.5
+done
+
 echo '========== AndroidLint =========='
 chmod -R 777 . 
 export SONAR_TOKEN=$(cat token.txt) && ./gradlew :app:lint
