@@ -110,6 +110,16 @@ stages:
       include:
       - skip-master
       - master
+- name: Build--APK for Java(Gradle)
+  iiidevops: deployed-environments
+  steps:
+  - runScriptConfig:
+      image: openjdk:8-jdk-slim
+      shellScript: ls -l; chmod 777 Dockerfile.sh; ./Dockerfile.sh
+  when:
+    branch:
+      include:
+      - master
 - name: Build--Build and push docker image
   iiidevops: deployed-environments
   steps:
@@ -175,4 +185,65 @@ stages:
     branch:
       include:
       - skip-master
+      - master
+- name: Test--Cmas APK scan pre-processing
+  iiidevops: cmas
+  steps:
+  - envFrom:
+    - sourceKey: API_TOKEN
+      sourceName: pipeline-api-key
+      targetKey: rancher_api_token
+    - sourceKey: rancher-url
+      sourceName: rancher
+      targetKey: rancher_url
+    - sourceKey: api-origin
+      sourceName: nexus
+      targetKey: api_origin
+    runScriptConfig:
+      image: iiiorg/rancher-cli:v2.4.6
+      shellScript: rancher login ${rancher_url} -t ${rancher_api_token} --skip-verify
+        && apt-get update; apt-get install -y jq && export PW=$(rancher kubectl get
+        secret nexus-bot -n ${CICD_GIT_REPO_NAME} -o=go-template='{{index .data "password"}}'
+        | base64 -d) && export UN=$(rancher kubectl get secret nexus-bot -n ${CICD_GIT_REPO_NAME}
+        -o=go-template='{{index .data "username"}}' | base64 -d) && curl --location
+        --request POST ${api_origin}/user/login --form username=$UN --form password=$PW
+        | jq -r '.data.token' > token.txt && export APITOKEN=$(cat token.txt) && pwd
+        && ls -lR ./app/build/outputs/apk/ && curl --location --request POST ${api_origin}/project/${CICD_GIT_REPO_NAME}/pipeline_file
+        --header "Authorization:Bearer $APITOKEN" --form commit_short_id=${CICD_GIT_COMMIT}
+        --form sequence=${CICD_EXECUTION_SEQUENCE} --form upload_file=@"./app/build/outputs/apk/debug/app-debug.apk"
+- name: Test--Cmas APK scan
+  iiidevops: cmas
+  steps:
+  - applyAppConfig:
+      answers:
+        git.branch: ${CICD_GIT_BRANCH}
+        git.commitID: ${CICD_GIT_COMMIT}
+        git.repoName: ${CICD_GIT_REPO_NAME}
+        git.url: ${CICD_GIT_URL}
+        pipeline.sequence: ${CICD_EXECUTION_SEQUENCE}
+        harbor.host: harbor-dev3.iiidevops.org
+      catalogTemplate: cattle-global-data:iii-dev-charts3-scan-cmas
+      name: ${CICD_GIT_REPO_NAME}-${CICD_GIT_BRANCH}-cmas
+      targetNamespace: ${CICD_GIT_REPO_NAME}
+      version: 0.0.3
+  when:
+    branch:
+      include:
+      - master
+- name: Test--Cmas APK scan post-processing
+  iiidevops: cmas
+  steps:
+  - envFrom:
+    - sourceKey: api-origin
+      sourceName: nexus
+      targetKey: api_origin
+    runScriptConfig:
+      image: iiiorg/rancher-cli:v2.4.6
+      shellScript: export APITOKEN=$(cat token.txt) && curl --location --request DELETE
+        ${api_origin}/project/${CICD_GIT_REPO_NAME}/pipeline_file --header "Authorization:Bearer
+        $APITOKEN" --form folder_name=${CICD_GIT_COMMIT}-${CICD_EXECUTION_SEQUENCE}
+        --form file_name=app-debug.apk
+  when:
+    branch:
+      include:
       - master
