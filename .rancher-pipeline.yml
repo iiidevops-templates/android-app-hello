@@ -29,7 +29,6 @@ stages:
 - name: Test--SonarQube for Java(Android)
   iiidevops: sonarqube
   steps:
-  - envFrom:
   - runScriptConfig:
       image: library/gradle:jdk11
       shellScript: chmod 777 SonarScan.sh; ./SonarScan.sh
