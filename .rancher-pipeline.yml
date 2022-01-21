@@ -6,6 +6,12 @@ stages:
     - sourceKey: api-origin
       sourceName: nexus
       targetKey: api_origin
+    - sourceKey: API_TOKEN
+      sourceName: pipeline-api-key
+      targetKey: rancher_api_token
+    - sourceKey: rancher-url
+      sourceName: rancher
+      targetKey: rancher_url
     runScriptConfig:
       image: iiiorg/rancher-cli:v2.4.6
       shellScript: curl --location -s --request POST ${api_origin}/rancher/delete_app
