@@ -184,6 +184,10 @@ stages:
         && ls -lR ./app/build/outputs/apk/ && curl --location --request POST ${api_origin}/project/${CICD_GIT_REPO_NAME}/pipeline_file
         --header "Authorization:Bearer $APITOKEN" --form commit_short_id=${CICD_GIT_COMMIT}
         --form sequence=${CICD_EXECUTION_SEQUENCE} --form upload_file=@"./app/build/outputs/apk/debug/app-debug.apk"
+  when:
+    branch:
+      include:
+      - master
 - name: Test--Cmas APK scan
   iiidevops: cmas
   steps:
