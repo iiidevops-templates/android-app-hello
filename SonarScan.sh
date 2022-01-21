@@ -31,7 +31,7 @@ echo y | android-sdk-linux/tools/android --silent update sdk --no-ui --all --fil
 gem install bundler -v 1.16.6 && bundle install && ls
 
 echo '========== Android Lint =========='
-#chmod -R 777 . 
+chmod -R 777 . 
 ./gradlew :app:lint
 export SONAR_TOKEN=$(cat sonar-token.txt) && ./gradlew -Dsonar.host.url=http://sonarqube-server-service.default:9000\
 	-Dsonar.projectKey=${CICD_GIT_REPO_NAME} -Dsonar.projectName=${CICD_GIT_REPO_NAME}\
