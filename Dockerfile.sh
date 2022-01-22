@@ -15,6 +15,12 @@ apt-get --quiet update --yes
 apt-get --quiet install --yes wget apt-utils tar unzip lib32stdc++6 lib32z1 build-essential ruby ruby-dev tree
 # We use this for xxd hex->binary
 apt-get --quiet install --yes vim-common
+# Install kubectl
+curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.19.0/bin/linux/amd64/kubectl \
+    && chmod +x ./kubectl && mv ./kubectl /usr/local/bin/kubectl
+# Install rancher-cli
+curl -LO https://github.com/rancher/cli/releases/download/v2.4.6/rancher-linux-amd64-v2.4.6.tar.gz \
+    && tar xf rancher-linux-amd64-v2.4.6.tar.gz && mv rancher-v2.4.6/rancher /usr/bin/rancher && rm -rf rancher-v2.4.6/
 # install Android SDK
 wget --quiet --output-document=android-sdk.tgz https://dl.google.com/android/android-sdk_r${ANDROID_SDK_TOOLS}-linux.tgz
 tar --extract --gzip --file=android-sdk.tgz

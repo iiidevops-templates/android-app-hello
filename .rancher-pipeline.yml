@@ -6,21 +6,12 @@ stages:
     - sourceKey: api-origin
       sourceName: nexus
       targetKey: api_origin
-    - sourceKey: API_TOKEN
-      sourceName: pipeline-api-key
-      targetKey: rancher_api_token
-    - sourceKey: rancher-url
-      sourceName: rancher
-      targetKey: rancher_url
     runScriptConfig:
       image: iiiorg/rancher-cli:v2.4.6
       shellScript: curl --location -s --request POST ${api_origin}/rancher/delete_app
         --form project_name=${CICD_GIT_REPO_NAME} --form branch_name=${CICD_GIT_BRANCH}
         && curl --location -s --request POST ${api_origin}/project/issues_commit_by_name
-        --form project_name=${CICD_GIT_REPO_NAME} && rancher login ${rancher_url}
-        -t ${rancher_api_token} --skip-verify && export TOKEN=$(rancher kubectl get
-        secret sonar-bot -n ${CICD_GIT_REPO_NAME} -o=go-template='{{index .data "sonar-token"}}'
-        | base64 -d) && echo $TOKEN > sonar-token.txt
+        --form project_name=${CICD_GIT_REPO_NAME}
   when:
     branch:
       include:
@@ -29,6 +20,13 @@ stages:
 - name: Test--SonarQube for Java(Android)
   iiidevops: sonarqube
   steps:
+  - envFrom:
+    - sourceKey: API_TOKEN
+      sourceName: pipeline-api-key
+      targetKey: rancher_api_token
+    - sourceKey: rancher-url
+      sourceName: rancher
+      targetKey: rancher_url
   - runScriptConfig:
       image: library/gradle:jdk11
       shellScript: chmod 777 SonarScan.sh; ./SonarScan.sh
