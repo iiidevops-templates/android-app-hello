@@ -6,7 +6,7 @@ stages:
     - sourceKey: api-origin
       sourceName: nexus
       targetKey: api_origin
-  - runScriptConfig:
+    runScriptConfig:
       image: iiiorg/rancher-cli:v2.4.6
       shellScript: curl --location -s --request POST ${api_origin}/rancher/delete_app
         --form project_name=${CICD_GIT_REPO_NAME} --form branch_name=${CICD_GIT_BRANCH}
@@ -27,7 +27,7 @@ stages:
     - sourceKey: rancher-url
       sourceName: rancher
       targetKey: rancher_url
-  - runScriptConfig:
+    runScriptConfig:
       image: library/gradle:jdk11
       shellScript: chmod 777 SonarScan.sh; ./SonarScan.sh
   when:
