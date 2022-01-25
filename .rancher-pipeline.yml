@@ -17,6 +17,7 @@ stages:
       include:
       - master
       - develop
+
 - name: Test--SonarQube for Java(Android)
   iiidevops: sonarqube
   steps:
@@ -35,6 +36,7 @@ stages:
       include:
       - master
       - develop
+
 - name: Test--Checkmarx source code scan
   iiidevops: checkmarx
   steps:
@@ -54,6 +56,7 @@ stages:
     branch:
       include:
       - skip-master
+
 - name: Deploy--Set Web environment variables
   iiidevops: deployed-environments
   steps:
@@ -78,17 +81,7 @@ stages:
     branch:
       include:
       - skip-master
-      - master
-- name: Build--APK for Java(Gradle)
-  iiidevops: deployed-environments
-  steps:
-  - runScriptConfig:
-      image: library/gradle:jdk11
-      shellScript: chmod 777 Dockerfile.sh; ./Dockerfile.sh
-  when:
-    branch:
-      include:
-      - master
+
 - name: Build--Build and push docker image
   iiidevops: deployed-environments
   steps:
@@ -108,7 +101,7 @@ stages:
     branch:
       include:
       - skip-master
-      - master
+
 - name: Deploy--Web
   iiidevops: deployed-environments
   steps:
@@ -132,7 +125,7 @@ stages:
     branch:
       include:
       - skip-master
-      - master
+
 - name: Deploy--Wait Web deployment
   iiidevops: deployed-environments
   steps:
@@ -155,7 +148,7 @@ stages:
     branch:
       include:
       - skip-master
-      - master
+
 - name: Test--Cmas APK scan pre-processing
   iiidevops: cmas
   steps:
@@ -184,7 +177,8 @@ stages:
   when:
     branch:
       include:
-      - master
+      - skip-master
+
 - name: Test--Cmas APK scan
   iiidevops: cmas
   steps:
@@ -195,7 +189,7 @@ stages:
         git.repoName: ${CICD_GIT_REPO_NAME}
         git.url: ${CICD_GIT_URL}
         pipeline.sequence: ${CICD_EXECUTION_SEQUENCE}
-        harbor.host: harbor-dev3.iiidevops.org
+        harbor.host: harbor-dev5.iiidevops.org
       catalogTemplate: cattle-global-data:iii-dev-charts3-scan-cmas
       name: ${CICD_GIT_REPO_NAME}-${CICD_GIT_BRANCH}-cmas
       targetNamespace: ${CICD_GIT_REPO_NAME}
@@ -203,7 +197,8 @@ stages:
   when:
     branch:
       include:
-      - master
+      - skip-master
+
 - name: Test--Cmas APK scan post-processing
   iiidevops: cmas
   steps:
@@ -220,4 +215,5 @@ stages:
   when:
     branch:
       include:
-      - master
+      - skip-master
+
