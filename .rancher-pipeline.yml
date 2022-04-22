@@ -12,7 +12,7 @@ stages:
         --form project_name=${CICD_GIT_REPO_NAME} --form branch_name=${CICD_GIT_BRANCH}
         && curl --location -s --request POST ${api_origin}/project/issues_commit_by_name
         --form project_name=${CICD_GIT_REPO_NAME}
-- name: Test--SonarQube source code scan for Java(Android)
+- name: Test--SonarQube for Java(Android)
   iiidevops: sonarqube
   steps:
   - applyAppConfig:
@@ -33,6 +33,7 @@ stages:
       include:
       - master
       - develop
+
 - name: Test--Checkmarx source code scan
   iiidevops: checkmarx
   steps:
@@ -52,6 +53,7 @@ stages:
     branch:
       include:
       - skip-master
+
 - name: Build--APK for Java(Gradle)
   iiidevops: deployed-environments
   steps:
@@ -62,6 +64,7 @@ stages:
     branch:
       include:
       - skip-master
+
 - name: Deploy--Set Web environment variables
   iiidevops: deployed-environments
   steps:
@@ -86,6 +89,7 @@ stages:
     branch:
       include:
       - skip-master
+
 - name: Build--Build and push docker image
   iiidevops: deployed-environments
   steps:
@@ -105,6 +109,7 @@ stages:
     branch:
       include:
       - skip-master
+
 - name: Deploy--Web
   iiidevops: deployed-environments
   steps:
@@ -129,6 +134,7 @@ stages:
     branch:
       include:
       - skip-master
+
 - name: Deploy--Wait Web deployment
   iiidevops: deployed-environments
   steps:
@@ -151,6 +157,7 @@ stages:
     branch:
       include:
       - skip-master
+
 - name: Test--Cmas APK scan pre-processing
   iiidevops: cmas
   steps:
@@ -180,6 +187,7 @@ stages:
     branch:
       include:
       - skip-master
+
 - name: Test--Cmas APK scan
   iiidevops: cmas
   steps:
@@ -199,6 +207,7 @@ stages:
     branch:
       include:
       - skip-master
+
 - name: Test--Cmas APK scan post-processing
   iiidevops: cmas
   steps:
@@ -216,3 +225,4 @@ stages:
     branch:
       include:
       - skip-master
+
