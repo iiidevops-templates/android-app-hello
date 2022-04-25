@@ -197,7 +197,7 @@ stages:
         git.repoName: ${CICD_GIT_REPO_NAME}
         git.url: ${CICD_GIT_URL}
         pipeline.sequence: ${CICD_EXECUTION_SEQUENCE}
-        harbor.host: harbor-dev5.iiidevops.org
+        harbor.host: harbor-dev3.iiidevops.org
       catalogTemplate: cattle-global-data:iii-dev-charts3-scan-cmas
       name: ${CICD_GIT_REPO_NAME}-${CICD_GIT_BRANCH}-cmas
       targetNamespace: ${CICD_GIT_REPO_NAME}
