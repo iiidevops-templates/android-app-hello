@@ -31,7 +31,6 @@ stages:
   when:
     branch:
       include:
-      - master
       - develop
 - name: Test--Checkmarx source code scan
   iiidevops: checkmarx
@@ -52,7 +51,6 @@ stages:
     branch:
       include:
       - skip-master
-      - master
 - name: Build--APK for Java(Gradle)
   iiidevops: deployed-environments
   steps:
