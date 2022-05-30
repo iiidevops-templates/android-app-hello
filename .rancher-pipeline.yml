@@ -52,7 +52,6 @@ stages:
     branch:
       include:
       - skip-master
-      - master
 - name: Build--APK for Java(Gradle)
   iiidevops: deployed-environments
   steps:
@@ -63,7 +62,6 @@ stages:
     branch:
       include:
       - skip-master
-      - master
 - name: Deploy--Set Web environment variables
   iiidevops: deployed-environments
   steps:
@@ -88,7 +86,6 @@ stages:
     branch:
       include:
       - skip-master
-      - master
 - name: Build--Build and push docker image
   iiidevops: deployed-environments
   steps:
@@ -108,7 +105,6 @@ stages:
     branch:
       include:
       - skip-master
-      - master
 - name: Build--Scan docker image
   iiidevops: deployed-environments
   steps:
@@ -124,7 +120,6 @@ stages:
     branch:
       include:
       - skip-master
-      - master
 - name: Deploy--Web
   iiidevops: deployed-environments
   steps:
@@ -149,7 +144,6 @@ stages:
     branch:
       include:
       - skip-master
-      - master
 - name: Deploy--Wait Web deployment
   iiidevops: deployed-environments
   steps:
@@ -172,7 +166,6 @@ stages:
     branch:
       include:
       - skip-master
-      - master
 - name: Test--Cmas APK scan pre-processing
   iiidevops: cmas
   steps:
@@ -202,7 +195,6 @@ stages:
     branch:
       include:
       - skip-master
-      - master
 - name: Test--Cmas APK scan
   iiidevops: cmas
   steps:
@@ -222,4 +214,3 @@ stages:
     branch:
       include:
       - skip-master
-      - master
