@@ -1,6 +1,1 @@
-{
-  "name": "Java-Android APP(Gradle)",
-  "description": "Java openjdk 8 / Gradle <a class='el-link el-link--primary' href='https://github.com/iiidevops-templates/android-app-hello/blob/master/README.md' target='_blank'>Android 空白範本說明</a><hr />  <li><strong>v1.18</strong>:調整 Web DB chart 支援掛載 NFS Volume 參數</li>  <li><strong>v1.17</strong>:增加掃描 docker Image 功能, Web chart 支援掛載 Volume</li>  <li><strong>v1.16</strong>:SonarQube均改用 helm chart 架構, Postman POD 名稱加上 git hash</li>",
-  "arguments": [
-  ]
-}
+{"name": "Java-Android APP(Gradle)", "description": "<p>Java openjdk 8 / Gradle </p><p><a class=\"el-link el-link--primary\" href=\"https://github.com/iiidevops-templates/android-app-hello/blob/master/README.md\" target=\"_blank\">Android \u7a7a\u767d\u7bc4\u672c\u8aaa\u660e</a></p><hr><p>  </p><li><strong>v1.18</strong>:\u8abf\u6574 Web DB chart \u652f\u63f4\u639b\u8f09 NFS Volume \u53c3\u6578</li><p>  </p><li><strong>v1.17</strong>:\u589e\u52a0\u6383\u63cf docker Image \u529f\u80fd, Web chart \u652f\u63f4\u639b\u8f09 Volume</li><p>  </p><li><strong>v1.16</strong>:SonarQube\u5747\u6539\u7528 helm chart \u67b6\u69cb, Postman POD \u540d\u7a31\u52a0\u4e0a git hash</li>", "arguments": []}
