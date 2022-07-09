@@ -158,5 +158,6 @@ COPY ./app/build/reports/lint-results.html ./srv/androidlint_report.html
 ## Reference and FAQ
 
 * [setting-up-gitlab-ci-for-android-projects](https://about.gitlab.com/blog/2018/10/24/setting-up-gitlab-ci-for-android-projects/)
+.
 
 ###### tags: `iiidevops Templates README` `Documentation`
