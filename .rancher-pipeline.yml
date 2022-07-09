@@ -189,9 +189,11 @@ stages:
         && apt-get update; apt-get install -y jq && export PW=$(rancher kubectl get
         secret nexus-bot -n ${CICD_GIT_REPO_NAME} -o=go-template='{{index .data "password"}}'
         | base64 -d) && export UN=$(rancher kubectl get secret nexus-bot -n ${CICD_GIT_REPO_NAME}
-        -o=go-template='{{index .data "username"}}' | base64 -d) && curl --location
-        --request POST ${api_origin}/user/login --form username=$UN --form password=$PW
-        | jq -r '.data.token' > token.txt && export APITOKEN=$(cat token.txt) && pwd
+        -o=go-template='{{index .data "username"}}' | base64 -d) 
+        && export DATARAW=$(printf '{"username":"%s","password":"%s"}' "$UN" "$PW") 
+        && curl --location --request POST ${api_origin}/user/login --header 
+        "Content-Type:application/json" --data-raw "$DATARAW" | jq -r '.data.token' > token.txt  
+        && export APITOKEN=$(cat token.txt) && pwd
         && ls -lR ./app/build/outputs/apk/ && curl --location --request POST ${api_origin}/project/${CICD_GIT_REPO_NAME}/pipeline_file
         --header "Authorization:Bearer $APITOKEN" --form commit_short_id=${CICD_GIT_COMMIT}
         --form sequence=${CICD_EXECUTION_SEQUENCE} --form upload_file=@"./app/build/outputs/apk/debug/app-debug.apk"
