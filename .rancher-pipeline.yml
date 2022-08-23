@@ -7,7 +7,7 @@ stages:
       sourceName: nexus
       targetKey: api_origin
     runScriptConfig:
-      image: iiiorg/rancher-cli:1.0.1
+      image: iiiorg/iiidevops-cli:0.0.1
       shellScript: curl --location -s --request POST ${api_origin}/rancher/delete_app
         --form project_name=${CICD_GIT_REPO_NAME} --form branch_name=${CICD_GIT_BRANCH}
         && curl --location -s --request POST ${api_origin}/project/issues_commit_by_name
@@ -31,7 +31,8 @@ stages:
   when:
     branch:
       include:
-      - skip
+      - master
+      - develop
 - name: Test--Checkmarx source code scan
   iiidevops: checkmarx
   steps:
@@ -50,7 +51,7 @@ stages:
   when:
     branch:
       include:
-      - skip
+      - skip-master
 - name: Build--APK for Java(Gradle)
   iiidevops: deployed-environments
   steps:
@@ -60,7 +61,7 @@ stages:
   when:
     branch:
       include:
-      - master
+      - skip-master
 - name: Deploy--Set Web environment variables
   iiidevops: deployed-environments
   steps:
@@ -72,7 +73,7 @@ stages:
       sourceName: rancher
       targetKey: rancher_url
     runScriptConfig:
-      image: iiiorg/rancher-cli:1.0.1
+      image: iiiorg/iiidevops-cli:0.0.1
       shellScript: rancher login ${rancher_url} -t ${rancher_api_token} --skip-verify
         && rancher kubectl delete configmap -n ${CICD_GIT_REPO_NAME} ${CICD_GIT_REPO_NAME}-${CICD_GIT_BRANCH}-env
         --ignore-not-found=true && perl iiidevops/bin/chk-app-env.pl && rancher kubectl
@@ -84,7 +85,7 @@ stages:
   when:
     branch:
       include:
-      - master
+      - skip-master
 - name: Build--Build and push docker image
   iiidevops: deployed-environments
   steps:
@@ -103,7 +104,7 @@ stages:
   when:
     branch:
       include:
-      - master
+      - skip-master
 - name: Build--Scan docker image
   iiidevops: deployed-environments
   steps:
@@ -112,13 +113,13 @@ stages:
       sourceName: nexus
       targetKey: api_origin
     runScriptConfig:
-      image: iiiorg/rancher-cli:1.0.1
+      image: iiiorg/iiidevops-cli:0.0.1
       shellScript: curl --location -s --request POST ${api_origin}/v2/harbor/${CICD_GIT_REPO_NAME}/scan
         --form branch=${CICD_GIT_BRANCH} --form commit_id=${CICD_GIT_COMMIT}
   when:
     branch:
       include:
-      - master
+      - skip-master
 - name: Deploy--Web
   iiidevops: deployed-environments
   steps:
@@ -138,8 +139,8 @@ stages:
         volumeMounts.nfs.enabled: false
         volumeMounts.nfs.server: 10.20.0.100
         volumeMounts.project: ${CICD_GIT_REPO_NAME}
-        volumeMounts.uuid: fca2b994-b212-11ec-9a09-5ed3230a7360
-        volumeMounts.mountPath: /usr/src/app/files
+        volumeMounts.uuid : fca2b994-b212-11ec-9a09-5ed3230a7360
+        volumeMounts.mountPath: '/usr/src/app/files'        
       catalogTemplate: cattle-global-data:iii-dev-charts3-web
       name: ${CICD_GIT_REPO_NAME}-${CICD_GIT_BRANCH}-serv
       targetNamespace: ${CICD_GIT_REPO_NAME}
@@ -147,7 +148,7 @@ stages:
   when:
     branch:
       include:
-      - master
+      - skip-master
 - name: Deploy--Wait Web deployment
   iiidevops: deployed-environments
   steps:
@@ -163,13 +164,13 @@ stages:
       sourceName: rancher
       targetKey: rancher_url
     runScriptConfig:
-      image: iiiorg/deployment-waiter:0.0.2
+      image: iiiorg/iiidevops-cli:0.0.1
       shellScript: rancher login ${rancher_url} -t ${rancher_api_token} --skip-verify;
-        bash /app/run.sh
+        deploy-wait.pl
   when:
     branch:
       include:
-      - master
+      - skip-master
 - name: Test--Cmas APK scan pre-processing
   iiidevops: cmas
   steps:
@@ -184,7 +185,7 @@ stages:
       sourceName: nexus
       targetKey: api_origin
     runScriptConfig:
-      image: iiiorg/rancher-cli:1.0.1
+      image: iiiorg/iiidevops-cli:0.0.1
       shellScript: rancher login ${rancher_url} -t ${rancher_api_token} --skip-verify
         && apt-get update; apt-get install -y jq && export PW=$(rancher kubectl get
         secret nexus-bot -n ${CICD_GIT_REPO_NAME} -o=go-template='{{index .data "password"}}'
@@ -198,7 +199,7 @@ stages:
   when:
     branch:
       include:
-      - master
+      - skip-master
 - name: Test--Cmas APK scan
   iiidevops: cmas
   steps:
@@ -217,4 +218,4 @@ stages:
   when:
     branch:
       include:
-      - master
+      - skip-master
