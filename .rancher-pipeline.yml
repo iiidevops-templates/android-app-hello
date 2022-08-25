@@ -31,8 +31,7 @@ stages:
   when:
     branch:
       include:
-      - master
-      - develop
+      - skip
 - name: Test--Checkmarx source code scan
   iiidevops: checkmarx
   steps:
@@ -51,7 +50,7 @@ stages:
   when:
     branch:
       include:
-      - skip-master
+      - skip
 - name: Build--APK for Java(Gradle)
   iiidevops: deployed-environments
   steps:
@@ -61,7 +60,7 @@ stages:
   when:
     branch:
       include:
-      - skip-master
+      - master
 - name: Deploy--Set Web environment variables
   iiidevops: deployed-environments
   steps:
@@ -85,7 +84,7 @@ stages:
   when:
     branch:
       include:
-      - skip-master
+      - master
 - name: Build--Build and push docker image
   iiidevops: deployed-environments
   steps:
@@ -104,7 +103,7 @@ stages:
   when:
     branch:
       include:
-      - skip-master
+      - master
 - name: Build--Scan docker image
   iiidevops: deployed-environments
   steps:
@@ -119,7 +118,7 @@ stages:
   when:
     branch:
       include:
-      - skip-master
+      - master
 - name: Deploy--Web
   iiidevops: deployed-environments
   steps:
@@ -139,8 +138,8 @@ stages:
         volumeMounts.nfs.enabled: false
         volumeMounts.nfs.server: 10.20.0.100
         volumeMounts.project: ${CICD_GIT_REPO_NAME}
-        volumeMounts.uuid : fca2b994-b212-11ec-9a09-5ed3230a7360
-        volumeMounts.mountPath: '/usr/src/app/files'        
+        volumeMounts.uuid: fca2b994-b212-11ec-9a09-5ed3230a7360
+        volumeMounts.mountPath: /usr/src/app/files
       catalogTemplate: cattle-global-data:iii-dev-charts3-web
       name: ${CICD_GIT_REPO_NAME}-${CICD_GIT_BRANCH}-serv
       targetNamespace: ${CICD_GIT_REPO_NAME}
@@ -148,7 +147,7 @@ stages:
   when:
     branch:
       include:
-      - skip-master
+      - master
 - name: Deploy--Wait Web deployment
   iiidevops: deployed-environments
   steps:
@@ -170,7 +169,7 @@ stages:
   when:
     branch:
       include:
-      - skip-master
+      - master
 - name: Test--Cmas APK scan pre-processing
   iiidevops: cmas
   steps:
@@ -187,17 +186,19 @@ stages:
     runScriptConfig:
       image: iiiorg/iiidevops-cli:0.0.1
       shellScript: rancher login ${rancher_url} -t ${rancher_api_token} --skip-verify
-        && export PW=$(rancher kubectl get secret nexus-bot -n ${CICD_GIT_REPO_NAME} -o=go-template='{{index .data "password"}}' | base64 -d) 
-        && export UN=$(rancher kubectl get secret nexus-bot -n ${CICD_GIT_REPO_NAME} -o=go-template='{{index .data "username"}}' | base64 -d) 
-        && curl --location --request POST ${api_origin}/user/login --form username=$UN --form password=$PW | jq -r '.data.token' > token.txt 
-        && export APITOKEN=$(cat token.txt) && pwd
-        && ls -lR ./app/build/outputs/apk/ && curl --location --request POST ${api_origin}/project/${CICD_GIT_REPO_NAME}/pipeline_file
+        && export PW=$(rancher kubectl get secret nexus-bot -n ${CICD_GIT_REPO_NAME}
+        -o=go-template='{{index .data "password"}}' | base64 -d) && export UN=$(rancher
+        kubectl get secret nexus-bot -n ${CICD_GIT_REPO_NAME} -o=go-template='{{index
+        .data "username"}}' | base64 -d) && curl --location --request POST ${api_origin}/user/login
+        --form username=$UN --form password=$PW | jq -r '.data.token' > token.txt
+        && export APITOKEN=$(cat token.txt) && pwd && ls -lR ./app/build/outputs/apk/
+        && curl --location --request POST ${api_origin}/project/${CICD_GIT_REPO_NAME}/pipeline_file
         --header "Authorization:Bearer $APITOKEN" --form commit_short_id=${CICD_GIT_COMMIT}
         --form sequence=${CICD_EXECUTION_SEQUENCE} --form upload_file=@"./app/build/outputs/apk/debug/app-debug.apk"
   when:
     branch:
       include:
-      - skip-master
+      - master
 - name: Test--Cmas APK scan
   iiidevops: cmas
   steps:
@@ -216,4 +217,4 @@ stages:
   when:
     branch:
       include:
-      - skip-master
+      - master
