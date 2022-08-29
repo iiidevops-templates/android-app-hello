@@ -50,7 +50,7 @@ stages:
   when:
     branch:
       include:
-      - master
+      - skip
 - name: Build--APK for Java(Gradle)
   iiidevops: deployed-environments
   steps:
