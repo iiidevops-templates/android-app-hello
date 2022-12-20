@@ -213,7 +213,7 @@ stages:
       catalogTemplate: cattle-global-data:iii-dev-charts3-scan-cmas
       name: ${CICD_GIT_REPO_NAME}-${CICD_GIT_BRANCH}-cmas
       targetNamespace: ${CICD_GIT_REPO_NAME}
-      version: 0.0.3
+      version: 0.0.4
   when:
     branch:
       include:
